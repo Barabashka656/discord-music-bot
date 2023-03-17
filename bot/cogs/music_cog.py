@@ -273,13 +273,28 @@ class MusicCog(commands.Cog):
         await inter.send(f"disconnect")
 
     @commands.Cog.listener()
+    async def on_track_start(
+            self,
+            data: mafic.TrackStartEvent
+    ):
+        await self.bot.change_presence(activity=disnake.Activity(
+            type=disnake.ActivityType.listening,
+            name=data.track.title
+        ))
+
+    @commands.Cog.listener()
     async def on_track_end(
             self,
             data: mafic.TrackEndEvent
     ):
 
         player: mafic.Player = data.player
-        if len(self.queue) == 0:
+
+        if len(self.queue) <= 1:
+            await self.bot.change_presence(activity=disnake.Activity(
+                type=disnake.ActivityType.unknown
+            ))
+            self.queue.clear()
             return
 
         self.queue.popleft()
@@ -288,7 +303,7 @@ class MusicCog(commands.Cog):
             track = self.queue[0]
             try:
                 await player.play(track)
-            except mafic.PlayerNotConnected as ex:
+            except mafic.PlayerNotConnected:
                 await player.disconnect()
                 await player.connect(timeout=60, reconnect=True, self_deaf=True)
                 await player.play(track)
