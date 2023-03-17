@@ -1,0 +1,9 @@
+__pycache__
+/.vscode
+/dev
+/logs
+.env
+application.yml
+discord-bot\bot\utils\lavalink_utils\executable barabashka nigger\JRE
+/build
+/dist
