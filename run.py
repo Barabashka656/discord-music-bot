@@ -13,7 +13,6 @@ from bot.data.loader import bot
 
 
 if __name__ == "__main__":
-    
     os.makedirs(os.path.dirname(LOGS_FOLDER), exist_ok=True)
     log_name = f"{LOGS_FOLDER}.log"
     logger = logging.getLogger('discord')
@@ -34,3 +33,4 @@ if __name__ == "__main__":
         if name.endswith(".py") and os.path.isfile(f"{COGS_FOLDER}/{name}"):
             bot.load_extension(f"bot.cogs.{name[:-3]}")
     bot.run(DISCORD_TOKEN)
+    

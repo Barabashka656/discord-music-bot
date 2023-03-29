@@ -1,14 +1,9 @@
 from bot.data.config import LAVALINK_PASSWORD
 
-
 import discord
 from discord.ext import commands
-
 import mafic
 
-
-   
-        
 
 class MyBot(discord.Bot):
     def __init__(self, *args, **kwargs):
@@ -25,17 +20,9 @@ class MyBot(discord.Bot):
             password=LAVALINK_PASSWORD,
         )
 
-
-
-
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Im logged in as {self.user}")
         print(f'Bot is ready!{self.is_ready()}')
         print(f"In {len(self.guilds)} guilds")
         print("-----------------------------")
-        
-
-    
-
-    
