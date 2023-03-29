@@ -1,0 +1,56 @@
+{
+    "spotify":
+    {
+        "links":
+        [
+            "https://open.spotify.com/track/0eG08cBeKk0mzykKjw4hcQ",
+            "https://open.spotify.com/album/7qemUq4n71awwVPOaX7jw4",
+            "https://open.spotify.com/playlist/7HAO9R9v203gkaPAgknOMp",
+            "https://open.spotify.com/artist/3ZztVuWxHzNpl0THurTFCv"
+        ],
+        "start_with": "https://open.spotify.com/"
+
+    },
+    
+    "apple_music":
+    {
+        "links":
+        [
+            "https://music.apple.com/cy/album/animals/1533388849?i=1533388859",
+            "https://music.apple.com/cy/album/for-those-that-wish-to-exist/1533388849",
+            "https://music.apple.com/us/playlist/architects-essentials/pl.40e568c609ae4b1eba58b6e89f4cd6a5",
+            "https://music.apple.com/cy/artist/architects/182821355"
+        ],
+        "start_with": "https://music.apple.com/"
+
+    },
+    
+    "deezer":
+    {
+        "links":
+        [
+            "https://deezer.page.link/U6BTQ2Q1KpmNt2yh8",
+            "https://www.deezer.com/track/1090538082",
+            "https://www.deezer.com/album/175537082",
+            "https://www.deezer.com/playlist/8164349742",
+            "https://www.deezer.com/artist/159126"
+        ],
+        "start_with":
+        [
+            "https://deezer.page.link/",
+            "https://www.deezer.com/"
+        ]
+    }, 
+    "yandex_music":
+    {
+        "links":
+        [
+            "https://music.yandex.ru/album/13886032/track/71663565",
+            "https://music.yandex.ru/album/13886032",
+            "https://music.yandex.ru/users/yamusic-bestsongs/playlists/701626",
+            "https://music.yandex.ru/artist/701626"
+        ],
+        "start_with": "https://music.yandex.ru/"
+    }
+    
+}

@@ -1,0 +1,6 @@
+__pycache__
+logs
+python_logs
+.env
+application.yml
+config.xml
