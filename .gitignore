@@ -4,3 +4,4 @@ python_logs
 .env
 application.yml
 config.xml
+setup.cfg

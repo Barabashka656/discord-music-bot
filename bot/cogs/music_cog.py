@@ -1,4 +1,5 @@
 import json
+import time
 
 from collections import (
     namedtuple,
@@ -11,7 +12,6 @@ from bot.data.config import (
 
 import mafic
 import humanize
-import time
 import discord
 from discord import FFmpegPCMAudio
 from discord.ext import (
@@ -27,7 +27,9 @@ class MusicCog(commands.Cog):
         self.RadioTrack = namedtuple('RTrack', 'title url')
         self.queue: deque[mafic.Track | self.RadioTrack] = deque()
         self.bot.loop.create_task(self.connect_nodes())
-        UrlDict = namedtuple('UrlDict', 'SPOTIFY_THUMBNAIL YOUTUBE_THUMBNAIL GACHI_RADIO GACHI_THUMBNAIL RADIO_THUMBNAIL')
+        UrlDict = namedtuple(
+            'UrlDict', 'SPOTIFY_THUMBNAIL YOUTUBE_THUMBNAIL GACHI_RADIO GACHI_THUMBNAIL RADIO_THUMBNAIL'
+        )
         self.url_tuple: UrlDict = UrlDict(
             'https://cdn.discordapp.com/attachments/1072997060225278032/1090332924987047947/Spotify_Icon.png',
             'https://cdn.discordapp.com/attachments/1072997060225278032/1090333233088041040/youtube_icon.png',
@@ -50,7 +52,7 @@ class MusicCog(commands.Cog):
             inter: discord.ApplicationContext,
             track: mafic.Track,
             player: mafic.Player
-        ):
+    ):
         print('reconnect')
         voice_channel: discord.VoiceChannel = inter.user.voice.channel
         await player.disconnect()
@@ -59,13 +61,13 @@ class MusicCog(commands.Cog):
         await player.play(track)
         embed = self.create_track_embed(inter)
         await inter.send_response(embed=embed)
-        
-        
-    def humanize_track_length(self) -> str:
-        track = self.queue[0]
-        
-        seconds = int(track.length / 1000)
-    
+
+    def humanize_milliseconds(
+            self,
+            length: int
+    ) -> str:
+        seconds = int(length / 1000)
+
         m, s = divmod(seconds, 60)
         h, m = divmod(m, 60)
         track_length = f"{m:02d}:{s:02d}"
@@ -76,15 +78,12 @@ class MusicCog(commands.Cog):
     def create_radio_track_embed(
             self,
             inter: discord.ApplicationContext
-        ) -> discord.Embed:
+    ) -> discord.Embed:
 
         track = self.queue[0]
 
         embed = discord.Embed(color=inter.guild.me.color)
-        
-        
-        
-            
+
         embed.set_author(
             name=self.bot.user.name,
             icon_url=self.url_tuple.RADIO_THUMBNAIL,
@@ -94,29 +93,67 @@ class MusicCog(commands.Cog):
 
         thumbnail_url = self.url_tuple.GACHI_THUMBNAIL
         embed.set_thumbnail(url=thumbnail_url)
-        
+
         return embed
 
+    def create_current_track_embed(
+            self,
+            inter: discord.ApplicationContext
+    ) -> discord.Embed:
+        bot_voice_client: mafic.Player = inter.guild.voice_client
+        track: mafic.Track = bot_voice_client.current
+
+        track_length = self.humanize_milliseconds(track.length)
+
+        track_position = self.humanize_milliseconds(bot_voice_client.position)
+        print(bot_voice_client.position, "23101132")
+        print(track_position)
+        embed = discord.Embed(color=inter.guild.me.color)
+
+        if track.source == 'youtube':
+            icon_url = self.url_tuple.YOUTUBE_THUMBNAIL
+            thumbnail_url = f"https://i.ytimg.com/vi/{track.identifier}/hq720.jpg"
+
+            embed.set_thumbnail(url=thumbnail_url)
+        elif track.source == 'spotify':
+            icon_url = self.url_tuple.SPOTIFY_THUMBNAIL
+
+        embed.set_author(
+            name=self.bot.user.name,
+            icon_url=icon_url,
+        )
+        embed.description = f'Playing "**{track.title}**" \n{track.uri}'
+        embed.add_field(name="Artist", value=track.author, inline=True)
+        embed.add_field(
+            name="In queue",
+            value=str(len(self.queue) - 1) + ' tracks',
+            inline=True
+        )
+
+        percent = int((bot_voice_client.position / track.length) * 25)
+        perbar = f"`{track_position}`| {(percent - 1) * '─'}⚪️{(25 - percent) * '─'} | `{track_length}`"
+        embed.add_field(name="Progress", value=perbar, inline=False)
+        return embed
 
     def create_track_embed(
             self,
             inter: discord.ApplicationContext
-        ) -> discord.Embed:
-         
+    ) -> discord.Embed:
+
         track = self.queue[0]
 
-        track_length = self.humanize_track_length()
+        track_length = self.humanize_milliseconds(track.length)
 
         embed = discord.Embed(color=inter.guild.me.color)
-        
+
         if track.source == 'youtube':
             icon_url = self.url_tuple.YOUTUBE_THUMBNAIL
             thumbnail_url = f"https://i.ytimg.com/vi/{track.identifier}/hq720.jpg"
-           
+
             embed.set_thumbnail(url=thumbnail_url)
         elif track.source == 'spotify':
             icon_url = self.url_tuple.SPOTIFY_THUMBNAIL
-            
+
         embed.set_author(
             name=self.bot.user.name,
             icon_url=icon_url,
@@ -125,13 +162,12 @@ class MusicCog(commands.Cog):
         embed.add_field(name="Artist", value=track.author, inline=True)
         embed.add_field(name="song length", value=track_length, inline=True)
         embed.add_field(
-            name="In queue", 
-            value=str(len(self.queue)-1) + ' tracks', 
+            name="In queue",
+            value=str(len(self.queue) - 1) + ' tracks',
             inline=True)
-        
+
         return embed
-      
-    
+
     async def is_radio_now(
         self,
         inter: discord.ApplicationContext
@@ -234,7 +270,6 @@ class MusicCog(commands.Cog):
         self,
         inter: discord.ApplicationContext
     ):
-
         if not await self.is_user_in_voice_channel(inter):
             return None
 
@@ -251,7 +286,7 @@ class MusicCog(commands.Cog):
         if not inter.guild.voice_client:
             player = await voice_channel.connect(cls=mafic.Player, reconnect=True, timeout=60)
             await inter.guild.change_voice_state(channel=voice_channel, self_deaf=True)
-        
+
         is_queue_empty = False
 
         if len(self.queue) == 0:
@@ -263,19 +298,16 @@ class MusicCog(commands.Cog):
             self.add_track_in_queue(tracks)
             is_playlist = False
         track: mafic.Track = self.queue[0]
-        
+
         if len(self.queue) == 1:        # nothing plays and one track added
             try:
-
                 await player.play(track)
                 embed = self.create_track_embed(inter)
                 await inter.send_response(embed=embed)
-            except mafic.PlayerNotConnected as e:
+            except mafic.PlayerNotConnected:
                 await self.mafic_reconnect(inter, track, player)
-                embed = self.create_track_embed(inter)
                 await inter.send_response(embed=embed)
             return
-            
 
         if not is_playlist:     # something plays and one track added
             await inter.send_response(f"Added {tracks[0].title}.")
@@ -287,10 +319,9 @@ class MusicCog(commands.Cog):
                 await inter.send_response(embed=embed)
                 if search.startswith("https://open.spotify.com/album"):
                     await inter.send_response(f"Added {tracks.name} (spotify album)")
-                else: 
+                else:
                     await inter.send_response(f"Added {tracks.name}.")
-
-            except mafic.PlayerNotConnected as e:
+            except mafic.PlayerNotConnected:
                 self.mafic_reconnect(inter, track, player)
 
     def add_playlist_in_queue(
@@ -299,8 +330,6 @@ class MusicCog(commands.Cog):
     ):
         for track in tracks.tracks:
             self.queue.append(track)
-
-        
 
     def add_track_in_queue(
         self,
@@ -348,12 +377,12 @@ class MusicCog(commands.Cog):
                 text = f"{inter.user.mention},\nInvalid youtube link\n"
                 await inter.send_response(content=text, ephemeral=True)
                 return None
-        
+
         if not tracks:
-            text = "I won't play this" 
+            text = "I won't play this"
             await inter.send_response(content=text, ephemeral=True)
             return None
-        
+
         return tracks
 
     @commands.slash_command()
@@ -362,15 +391,14 @@ class MusicCog(commands.Cog):
         if len(self.queue) > 0:
             text = f"{inter.user.mention}, the radio can't be turned on\nwhen there are no songs in the queue\n"
             return await inter.send_response(content=text, ephemeral=True)
-      
+
         player: discord.VoiceClient = await self.get_voice_client(inter)
-       
+
         if not player:
             return
-        
+
         player.play(FFmpegPCMAudio(executable=FFMPEG_EXE, source=self.url_tuple.GACHI_RADIO))
-     
-        
+
         await self.bot.change_presence(activity=discord.Activity(
             type=discord.ActivityType.listening,
             name=station
@@ -379,31 +407,27 @@ class MusicCog(commands.Cog):
         self.queue.append(self.RadioTrack(station, self.url_tuple.GACHI_RADIO))
         embed = self.create_radio_track_embed(inter)
         await inter.send_response(embed=embed)
-       
 
     @commands.slash_command()
     async def play(self, inter: discord.ApplicationContext, *, search: str):
         """
-        play a song in your channel     
+        play a song in your channel
         """
-        
 
         player: mafic.Player = await self.get_mafic_player(inter)
         if not player:
             return
-        
+
         tracks = await self.fetch_mafic_tracks(inter, search, player)
         if not tracks:
             return
 
-        
         await self.add_song_to_queue(
             inter=inter,
             player=player,
             tracks=tracks,
             search=search
         )
-        
 
     @commands.slash_command()
     async def skip(self, inter: discord.ApplicationContext):
@@ -433,7 +457,7 @@ class MusicCog(commands.Cog):
         else:
             previous_track: str = self.queue[0]
             await player.stop()
-        
+
         if len(self.queue) > 0:
             embed = self.create_track_embed(inter)
             if isinstance(self.queue[0], tuple):
@@ -442,11 +466,9 @@ class MusicCog(commands.Cog):
                 text = f"Track: {previous_track.title} was skipped,\nNow playing: {self.queue[0].title}"
         else:
             text = f"Track: {previous_track.title} was skipped,\nThe queue is empty"
-            return await inter.send_response(content=text, ephemeral=True)  
-          
+            return await inter.send_response(content=text, ephemeral=True)
 
-        await inter.send_response(content=text, embed=embed, ephemeral=True)     
-        
+        await inter.send_response(content=text, embed=embed, ephemeral=True)
 
     @commands.slash_command()
     async def current(self, inter: discord.ApplicationContext):
@@ -460,19 +482,19 @@ class MusicCog(commands.Cog):
         if len(self.queue) == 0:
             text = "Nothing is playing right now"
             return await inter.send_response(content=text, ephemeral=True)
-        
+
         if isinstance(self.queue[0], tuple):
             text = "Now playing radio station\n" + self.queue[0].title
             return await inter.send_response(content=text, ephemeral=True)
 
-        embed = self.create_track_embed(inter)
-       
+        embed = self.create_current_track_embed(inter)
+
         await inter.response.send_message(embed=embed)
 
     @commands.slash_command()
     async def pause(self, inter: discord.ApplicationContext):
         """
-        pause current song 
+        pause current song
         """
 
         if not await self.is_bot_in_voice_channel(inter):
@@ -490,7 +512,7 @@ class MusicCog(commands.Cog):
         else:
             await player.pause()
 
-        await inter.send_response(f"paused", ephemeral=True)
+        await inter.send_response("paused", ephemeral=True)
 
     @commands.slash_command()
     async def resume(self, inter: discord.ApplicationContext):
@@ -512,7 +534,7 @@ class MusicCog(commands.Cog):
         else:
             await player.resume()
 
-        await inter.send_response(f"resumed", ephemeral=True)
+        await inter.send_response("resumed", ephemeral=True)
 
     @commands.slash_command()
     async def clear(self, inter: discord.ApplicationContext):
@@ -535,7 +557,6 @@ class MusicCog(commands.Cog):
         self.queue.append(current_track)
         text = f"{tracks_count-1} tracks have been removed from the queue"
         await inter.send_response(content=text, ephemeral=True)
-        
 
     @commands.slash_command()
     async def stop(self, inter: discord.ApplicationContext):
@@ -583,7 +604,7 @@ class MusicCog(commands.Cog):
         player = bot_voice_client
 
         await player.disconnect()
-        await inter.send_response(f"disconnect")
+        await inter.send_response("disconnect")
 
     @commands.Cog.listener()
     async def on_track_start(
@@ -615,7 +636,7 @@ class MusicCog(commands.Cog):
             track = self.queue[0]
             try:
                 await player.play(track)
-            except mafic.PlayerNotConnected as e:
+            except mafic.PlayerNotConnected:
                 await player.disconnect()
                 await player.connect(cls=mafic.Player, reconnect=True, self_deaf=True)
                 await player.play(track)
@@ -654,7 +675,7 @@ class MusicCog(commands.Cog):
         except IndexError:
             return await inter.response.send_message("No spotify was detected")
         start = humanize.naturaltime(discord.utils.utcnow() - act.created_at)
-        
+
         name = act.title
         art = " ".join(act.artists)
         album = act.album

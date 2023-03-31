@@ -1,9 +1,8 @@
 from enum import Enum
 
 import discord
-from discord.ext import (
-    commands,
-)
+from discord.ext import commands
+
 
 class Sinks(Enum):
     mp3 = discord.sinks.MP3Sink()
