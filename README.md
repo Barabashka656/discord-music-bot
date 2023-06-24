@@ -1,3 +1,3 @@
-# discord-music-bot
+# discord-bot
 
-discord music bot using py-cord
+discord bot using py-cord
