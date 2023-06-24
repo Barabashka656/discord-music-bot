@@ -9,7 +9,6 @@
             "https://open.spotify.com/artist/3ZztVuWxHzNpl0THurTFCv"
         ],
         "start_with": "https://open.spotify.com/"
-
     },
     
     "apple_music":
@@ -22,7 +21,6 @@
             "https://music.apple.com/cy/artist/architects/182821355"
         ],
         "start_with": "https://music.apple.com/"
-
     },
     
     "deezer":
@@ -52,5 +50,4 @@
         ],
         "start_with": "https://music.yandex.ru/"
     }
-    
 }

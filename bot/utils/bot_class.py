@@ -1,8 +1,8 @@
 from bot.data.config import LAVALINK_PASSWORD
 
+import mafic
 import discord
 from discord.ext import commands
-import mafic
 
 
 class MyBot(discord.Bot):
@@ -14,7 +14,7 @@ class MyBot(discord.Bot):
 
     async def add_nodes(self):
         await self.pool.create_node(
-            host="localhost",  # localhost
+            host="localhost",
             port=2333,
             label="SASASA2",
             password=LAVALINK_PASSWORD,

@@ -17,6 +17,7 @@ flake8-simplify = "*"
 flake8-pie = "*"
 hacking = "*"
 pep8-naming = "*"
+pyinstaller = "*"
 
 [requires]
 python_version = "3.10"

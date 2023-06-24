@@ -71,11 +71,6 @@ class RecordCog(commands.Cog):
             await inter.respond("Not recording in this guild.")
 
 
-
-
-
-
-
 def setup(bot: commands.Bot):
     bot.add_cog(RecordCog(bot))
     print(f"> Extension {__name__} is ready")
