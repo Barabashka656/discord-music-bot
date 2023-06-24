@@ -1,22 +1,16 @@
 import json
 import time
-
+import os 
 from collections import (
     namedtuple,
     deque
-)
-from bot.data.config import (
-    SUPPORTED_LINKS_PATH,
-    FFMPEG_EXE
 )
 
 import mafic
 import humanize
 import discord
 from discord import FFmpegPCMAudio
-from discord.ext import (
-    commands,
-)
+from discord.ext import commands
 
 
 class MusicCog(commands.Cog):
@@ -30,18 +24,19 @@ class MusicCog(commands.Cog):
         UrlDict = namedtuple(
             'UrlDict', 'SPOTIFY_THUMBNAIL YOUTUBE_THUMBNAIL GACHI_RADIO GACHI_THUMBNAIL RADIO_THUMBNAIL'
         )
-        self.url_tuple: UrlDict = UrlDict(
+        self.URL_TUPLE: UrlDict = UrlDict(
             'https://cdn.discordapp.com/attachments/1072997060225278032/1090332924987047947/Spotify_Icon.png',
             'https://cdn.discordapp.com/attachments/1072997060225278032/1090333233088041040/youtube_icon.png',
             'https://stream-017.zeno.fm/f174214qvzzuv?zs=8Btpgg72Tg-uHINApotdaw&aw_0_req_lsid=346f2b546c923317c8f8b8cb04ad8743',
             'https://cdn.discordapp.com/attachments/1072997060225278032/1090354097338720327/gachi.png',
             'https://cdn.discordapp.com/attachments/1072997060225278032/1090355279398437004/radio.png'
         )
-
-        with open(SUPPORTED_LINKS_PATH, 'r') as file:
+        links_path = os.path.join('bot', 'cogs', 'supported_links.json')
+        with open(links_path, 'r') as file:
             data: dict = json.load(file)
-
             self.SUPPORTED_LINKDS: dict = data
+        
+        self.FFMPEG_PATH = os.path.join('bot', 'utils', 'ffmpeg_utils', 'ffmpeg.exe') 
 
     async def connect_nodes(self):
         """Connect to our Lavalink nodes."""
@@ -86,12 +81,12 @@ class MusicCog(commands.Cog):
 
         embed.set_author(
             name=self.bot.user.name,
-            icon_url=self.url_tuple.RADIO_THUMBNAIL,
+            icon_url=self.URL_TUPLE.RADIO_THUMBNAIL,
         )
         embed.description = f'Playing "**{track.title}**" \n{track.url}'
         embed.add_field(name="Station", value='Gachi Station')
 
-        thumbnail_url = self.url_tuple.GACHI_THUMBNAIL
+        thumbnail_url = self.URL_TUPLE.GACHI_THUMBNAIL
         embed.set_thumbnail(url=thumbnail_url)
 
         return embed
@@ -111,12 +106,12 @@ class MusicCog(commands.Cog):
         embed = discord.Embed(color=inter.guild.me.color)
 
         if track.source == 'youtube':
-            icon_url = self.url_tuple.YOUTUBE_THUMBNAIL
+            icon_url = self.URL_TUPLE.YOUTUBE_THUMBNAIL
             thumbnail_url = f"https://i.ytimg.com/vi/{track.identifier}/hq720.jpg"
 
             embed.set_thumbnail(url=thumbnail_url)
         elif track.source == 'spotify':
-            icon_url = self.url_tuple.SPOTIFY_THUMBNAIL
+            icon_url = self.URL_TUPLE.SPOTIFY_THUMBNAIL
 
         embed.set_author(
             name=self.bot.user.name,
@@ -144,15 +139,15 @@ class MusicCog(commands.Cog):
 
         track_length = self.humanize_milliseconds(track.length)
 
-        embed = discord.Embed(color=inter.guild.me.color)
+        embed = discord.Embed(color=inter.guild.me.color) #TODO(EASY) instead of inter can self
 
         if track.source == 'youtube':
-            icon_url = self.url_tuple.YOUTUBE_THUMBNAIL
+            icon_url = self.URL_TUPLE.YOUTUBE_THUMBNAIL
             thumbnail_url = f"https://i.ytimg.com/vi/{track.identifier}/hq720.jpg"
 
             embed.set_thumbnail(url=thumbnail_url)
         elif track.source == 'spotify':
-            icon_url = self.url_tuple.SPOTIFY_THUMBNAIL
+            icon_url = self.URL_TUPLE.SPOTIFY_THUMBNAIL
 
         embed.set_author(
             name=self.bot.user.name,
@@ -396,15 +391,15 @@ class MusicCog(commands.Cog):
 
         if not player:
             return
-
-        player.play(FFmpegPCMAudio(executable=FFMPEG_EXE, source=self.url_tuple.GACHI_RADIO))
+        
+        player.play(FFmpegPCMAudio(executable=self.FFMPEG_PATH, source=self.URL_TUPLE.GACHI_RADIO))
 
         await self.bot.change_presence(activity=discord.Activity(
             type=discord.ActivityType.listening,
             name=station
         ))
 
-        self.queue.append(self.RadioTrack(station, self.url_tuple.GACHI_RADIO))
+        self.queue.append(self.RadioTrack(station, self.URL_TUPLE.GACHI_RADIO))
         embed = self.create_radio_track_embed(inter)
         await inter.send_response(embed=embed)
 

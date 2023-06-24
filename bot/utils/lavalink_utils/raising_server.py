@@ -1,10 +1,8 @@
 import os
 
-from bot.data.config import JAVA_PATH
-
-
 def start_server():
     current_dir = os.getcwd()
-    os.chdir(JAVA_PATH)
+    java_path = os.path.join('bot', 'utils', 'lavalink_utils')
+    os.chdir(java_path)
     os.system('start java -jar Lavalink.jar')
     os.chdir(current_dir)
